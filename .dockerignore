@@ -1,0 +1,32 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Development files
+.env
+.env.local
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test files
+*_test.go
+testdata/
+
+# Build artifacts
+main
+tekton-hub-proxy
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

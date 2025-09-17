@@ -1,0 +1,16 @@
+server:
+  port: 8080
+  host: "0.0.0.0"
+
+artifacthub:
+  base_url: "https://artifacthub.io"
+  timeout: 30s
+  max_retries: 3
+
+catalog_mappings:
+  - tekton_hub: "tekton"
+    artifact_hub: "tekton-catalog-tasks"
+
+logging:
+  level: "info"
+  format: "json"
