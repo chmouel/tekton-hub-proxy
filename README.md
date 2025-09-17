@@ -27,9 +27,11 @@ A Go-based HTTP proxy that translates Tekton Hub API calls to Artifact Hub forma
 The proxy implements the complete Tekton Hub API:
 
 ### Catalog Endpoints
+
 - `GET /v1/catalogs` - List available catalogs
 
 ### Resource Endpoints
+
 - `GET /v1/resource/{catalog}/{kind}/{name}` - Get resource details
 - `GET /v1/resource/{catalog}/{kind}/{name}/{version}` - Get specific version
 - `GET /v1/resource/{catalog}/{kind}/{name}/{version}/yaml` - Get YAML content
@@ -38,10 +40,12 @@ The proxy implements the complete Tekton Hub API:
 - `GET /v1/resource/{catalog}/{kind}/{name}/{version}/raw` - Get raw YAML for version
 
 ### Query Endpoints
+
 - `GET /v1/resources` - List all resources
 - `GET /v1/query` - Search resources with filters
 
 ### Health
+
 - `GET /health` - Health check endpoint
 
 ## Configuration
@@ -83,6 +87,7 @@ All configuration can be overridden with environment variables using the `THP_` 
 ### Local Development
 
 1. **Clone and setup**:
+
    ```bash
    git clone <repository>
    cd tekton-hub-proxy
@@ -90,6 +95,7 @@ All configuration can be overridden with environment variables using the `THP_` 
    ```
 
 2. **Run the server**:
+
    ```bash
    go run cmd/server/main.go
 
@@ -98,6 +104,7 @@ All configuration can be overridden with environment variables using the `THP_` 
    ```
 
 3. **Test the API**:
+
    ```bash
    curl http://localhost:8080/v1/catalogs
    curl http://localhost:8080/v1/resource/tekton/task/buildah
@@ -106,11 +113,13 @@ All configuration can be overridden with environment variables using the `THP_` 
 ### Docker Deployment
 
 1. **Build the image**:
+
    ```bash
    docker build -t tekton-hub-proxy .
    ```
 
 2. **Run the container**:
+
    ```bash
    docker run -p 8080:8080 \
      -e THP_LOGGING_LEVEL=debug \
@@ -118,6 +127,7 @@ All configuration can be overridden with environment variables using the `THP_` 
    ```
 
 3. **With custom configuration**:
+
    ```bash
    docker run -p 8080:8080 \
      -v $(pwd)/custom-config.yaml:/root/configs/config.yaml \
@@ -143,6 +153,7 @@ The proxy automatically converts between these formats.
 ### Response Format Translation
 
 **Tekton Hub YAML Response**:
+
 ```json
 {
   "data": {
@@ -152,6 +163,7 @@ The proxy automatically converts between these formats.
 ```
 
 **Artifact Hub Package Response**:
+
 ```json
 {
   "data": {
@@ -216,6 +228,7 @@ The `/health` endpoint returns:
 ### Metrics
 
 All requests are logged with:
+
 - Method and path
 - Status code
 - Response time
@@ -240,3 +253,4 @@ All requests are logged with:
 ## License
 
 Apache License 2.0 - see LICENSE file for details.
+
