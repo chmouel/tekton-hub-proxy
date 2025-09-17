@@ -35,7 +35,7 @@ func NewHandlers(
 func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "healthy"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "healthy"})
 }
 
 func (h *Handlers) ListCatalogs(w http.ResponseWriter, r *http.Request) {
@@ -88,11 +88,11 @@ func (h *Handlers) GetResource(w http.ResponseWriter, r *http.Request) {
 
 	// Log the translation for debugging
 	logrus.WithFields(logrus.Fields{
-		"original_catalog":    catalog,
-		"translated_catalog":  artifactHubCatalog,
-		"original_kind":       kind,
+		"original_catalog":     catalog,
+		"translated_catalog":   artifactHubCatalog,
+		"original_kind":        kind,
 		"translated_repo_kind": repoKind,
-		"name":                name,
+		"name":                 name,
 	}).Info("🔍 Translation details")
 
 	// Get latest package from Artifact Hub
@@ -246,7 +246,7 @@ func (h *Handlers) GetResourceYAMLRaw(w http.ResponseWriter, r *http.Request) {
 	// Return raw YAML content
 	w.Header().Set("Content-Type", "application/x-yaml")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(pkg.Data.ManifestRaw))
+	_, _ = w.Write([]byte(pkg.Data.ManifestRaw))
 }
 
 func (h *Handlers) GetLatestResourceYAML(w http.ResponseWriter, r *http.Request) {
@@ -271,7 +271,7 @@ func (h *Handlers) GetLatestResourceYAML(w http.ResponseWriter, r *http.Request)
 	// Return raw YAML content
 	w.Header().Set("Content-Type", "application/x-yaml")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(pkg.Data.ManifestRaw))
+	_, _ = w.Write([]byte(pkg.Data.ManifestRaw))
 }
 
 func (h *Handlers) GetResourceReadme(w http.ResponseWriter, r *http.Request) {
@@ -330,7 +330,7 @@ func (h *Handlers) getPackageFromArtifactHub(catalog, kind, name, version string
 	return h.artifactHubClient.GetPackage(repoKind, artifactHubCatalog, name, artifactHubVersion)
 }
 
-func (h *Handlers) writeJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {
+func (h *Handlers) writeJSONResponse(w http.ResponseWriter, statusCode int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
@@ -344,4 +344,3 @@ func (h *Handlers) writeErrorResponse(w http.ResponseWriter, statusCode int, mes
 		"name":  http.StatusText(statusCode),
 	})
 }
-

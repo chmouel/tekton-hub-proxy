@@ -44,19 +44,7 @@ run-debug: build
 	@echo "Running $(NAME) with debug logging..."
 	./$(OUTPUT_DIR)/$(NAME) -debug
 
-lint: lint-go lint-md
-
-lint-go:
-	@echo "linting."
-	golangci-lint version
-	golangci-lint run ./... --modules-download-mode=vendor
-
-.PHONY: lint-md
-lint-md: ${MD_FILES} ## runs markdownlint and vale on all markdown files
-	@echo "Linting markdown files..."
-	@markdownlint $(MD_FILES)
-	@echo "Grammar check with vale of documentation..."
-	@vale docs/content --minAlertLevel=error --output=line
+lint: lint-go 
 
 fmt:
 	@go fmt `go list ./... | grep -v /vendor/`

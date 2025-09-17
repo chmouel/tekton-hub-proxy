@@ -8,12 +8,11 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"tekton-hub-proxy/internal/config"
+	"tekton-hub-proxy/internal/models"
 	"time"
 
 	"github.com/sirupsen/logrus"
-
-	"tekton-hub-proxy/internal/config"
-	"tekton-hub-proxy/internal/models"
 )
 
 type ArtifactHubClient struct {
@@ -37,12 +36,12 @@ func (c *ArtifactHubClient) GetPackage(repoKind, catalog, name, version string) 
 	url := c.baseURL + path
 
 	logrus.WithFields(logrus.Fields{
-		"api_call":   "GetPackage",
-		"repo_kind":  repoKind,
-		"catalog":    catalog,
-		"name":       name,
-		"version":    version,
-		"url":        url,
+		"api_call":  "GetPackage",
+		"repo_kind": repoKind,
+		"catalog":   catalog,
+		"name":      name,
+		"version":   version,
+		"url":       url,
 	}).Debug("🌐 Making Artifact Hub API call")
 
 	var response models.ArtifactHubPackage
@@ -166,7 +165,7 @@ func (c *ArtifactHubClient) makeRequest(method, url string, result interface{}) 
 			continue
 		}
 
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -205,3 +204,4 @@ type SearchParams struct {
 	Offset       int
 	Facets       bool
 }
+
