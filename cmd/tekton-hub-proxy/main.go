@@ -21,6 +21,7 @@ func main() {
 		debug      = flag.Bool("debug", false, "Enable debug logging")
 		configPath = flag.String("config", "", "Path to config file")
 		port       = flag.Int("port", 0, "Server port (overrides config)")
+		bindAddr   = flag.String("bind", "", "Bind address (overrides config)")
 		help       = flag.Bool("help", false, "Show help message")
 	)
 	flag.Parse()
@@ -45,6 +46,9 @@ func main() {
 	}
 	if *port > 0 {
 		cfg.Server.Port = *port
+	}
+	if *bindAddr != "" {
+		cfg.Server.Host = *bindAddr
 	}
 
 	// Setup logging
@@ -108,13 +112,13 @@ func setupRoutes(h *handlers.Handlers) *mux.Router {
 	// Catalog endpoints
 	router.HandleFunc("/v1/catalogs", h.ListCatalogs).Methods("GET")
 
-	// Resource endpoints
-	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}", h.GetResource).Methods("GET")
-	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}/{version}", h.GetResourceVersion).Methods("GET")
+	// Resource endpoints (order matters - more specific routes first)
+	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}/raw", h.GetLatestResourceYAML).Methods("GET")
 	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}/{version}/yaml", h.GetResourceYAML).Methods("GET")
 	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}/{version}/readme", h.GetResourceReadme).Methods("GET")
-	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}/raw", h.GetLatestResourceYAML).Methods("GET")
 	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}/{version}/raw", h.GetResourceYAMLRaw).Methods("GET")
+	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}/{version}", h.GetResourceVersion).Methods("GET")
+	router.HandleFunc("/v1/resource/{catalog}/{kind}/{name}", h.GetResource).Methods("GET")
 	router.HandleFunc("/v1/resource/{id:[0-9]+}", h.GetResourceByID).Methods("GET")
 	router.HandleFunc("/v1/resource/{id:[0-9]+}/versions", h.GetResourceVersionsByID).Methods("GET")
 	router.HandleFunc("/v1/resource/version/{versionID:[0-9]+}", h.GetResourceByVersionID).Methods("GET")

@@ -74,6 +74,7 @@ logging:
 All configuration can be overridden with environment variables using the `THP_` prefix:
 
 - `THP_SERVER_PORT=8080`
+- `THP_SERVER_HOST=192.168.1.100`
 - `THP_ARTIFACTHUB_BASE_URL=https://artifacthub.io`
 - `THP_LOGGING_LEVEL=debug`
 
@@ -91,6 +92,9 @@ All configuration can be overridden with environment variables using the `THP_` 
 2. **Run the server**:
    ```bash
    go run cmd/server/main.go
+
+   # Or with custom options
+   go run cmd/server/main.go -debug -port 9090 -bind 192.168.1.100
    ```
 
 3. **Test the API**:
