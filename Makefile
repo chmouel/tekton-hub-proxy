@@ -44,7 +44,17 @@ run-debug: build
 	@echo "Running $(NAME) with debug logging..."
 	./$(OUTPUT_DIR)/$(NAME) -debug
 
-lint: lint-go 
+lint: lint-go lint-md
+
+lint-go:
+	@echo "linting."
+	golangci-lint version
+	golangci-lint run ./... --modules-download-mode=vendor
+
+.PHONY: lint-md
+lint-md: ${MD_FILES} ## runs markdownlint on all markdown files
+	@echo "Linting markdown files..."
+	@markdownlint $(MD_FILES)
 
 fmt:
 	@go fmt `go list ./... | grep -v /vendor/`

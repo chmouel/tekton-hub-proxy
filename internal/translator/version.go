@@ -99,6 +99,11 @@ func (v *VersionTranslator) ArtifactHubToTekton(artifactHubVersion string) (stri
 		return artifactHubVersion, nil
 	}
 
+	// If it has a pre-release, don't simplify it.
+	if ver.Prerelease() != "" {
+		return artifactHubVersion, nil
+	}
+
 	segments := ver.Segments()
 	if len(segments) >= 2 {
 		// For versions like 1.2.0, convert to 1.2 (simplified semver)

@@ -1,20 +1,29 @@
 # Tekton Hub to Artifact Hub Translation Proxy
 
-A Go-based HTTP proxy that translates Tekton Hub API calls to Artifact Hub format, enabling seamless integration between systems expecting Tekton Hub API while using Artifact Hub as the backend.
+A Go-based HTTP proxy that translates Tekton Hub API calls to Artifact Hub
+format, enabling seamless integration between systems expecting Tekton Hub API
+while using Artifact Hub as the backend.
 
 ## Features
 
 - **API Translation**: Converts Tekton Hub API endpoints to Artifact Hub format
-- **Catalog Mapping**: Configurable mapping between Tekton Hub and Artifact Hub catalog names
-- **Version Conversion**: Handles conversion between simplified semver (0.1) and full semver (0.1.0)
-- **Response Format Translation**: Converts Artifact Hub responses to Tekton Hub format
+- **Catalog Mapping**: Configurable mapping between Tekton Hub and Artifact Hub
+  catalog names
+- **Version Conversion**: Handles conversion between simplified semver (0.1) and
+  full semver (0.1.0)
+- **Response Format Translation**: Converts Artifact Hub responses to Tekton Hub
+  format
 - **Comprehensive Middleware**: Includes CORS, logging, and recovery middleware
 - **Health Checks**: Built-in health check endpoint
 - **Docker Support**: Containerized deployment ready
 
+## Demo
+
+[![Tekton Hub Proxy Demo](https://img.youtube.com/vi/lzVMj7fKnUA/0.jpg)](https://www.youtube.com/watch?v=lzVMj7fKnUA)
+
 ## Architecture
 
-```
+```ascii
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Tekton Hub    │    │  Translation    │    │  Artifact Hub   │
 │     Client      │───▶│     Proxy       │───▶│      API        │
@@ -176,7 +185,7 @@ The proxy automatically converts between these formats.
 
 ### Project Structure
 
-```
+```console
 tekton-hub-proxy/
 ├── cmd/server/          # Application entry point
 ├── internal/
@@ -237,7 +246,8 @@ All requests are logged with:
 
 ## Limitations
 
-- **ID-based lookups**: Endpoints requiring specific IDs return `501 Not Implemented` as Artifact Hub doesn't provide direct ID mapping
+- **ID-based lookups**: Endpoints requiring specific IDs return `501 Not  
+  Implemented` as Artifact Hub doesn't provide direct ID mapping
 - **Category/Tag mapping**: Basic keyword-based mapping is used
 - **Platform support**: Defaults to `linux/amd64`
 - **Rating**: Uses default rating as Artifact Hub doesn't provide this metric
@@ -253,4 +263,3 @@ All requests are logged with:
 ## License
 
 Apache License 2.0 - see LICENSE file for details.
-
