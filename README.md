@@ -446,6 +446,215 @@ networks:
     driver: bridge
 ```
 
+### Systemd Container Service
+
+For production deployments on systems with systemd, you can run the proxy as a systemd container service using Podman or Docker.
+
+#### Using Podman (Recommended)
+
+Create a systemd service file (`/etc/systemd/system/tekton-hub-proxy.service`):
+
+```ini
+[Unit]
+Description=Tekton Hub Proxy Container
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+NotifyAccess=all
+Restart=always
+RestartSec=5
+TimeoutStartSec=900
+TimeoutStopSec=120
+ExecStartPre=-/usr/bin/podman stop tekton-hub-proxy
+ExecStartPre=-/usr/bin/podman rm tekton-hub-proxy
+ExecStart=/usr/bin/podman run --rm --name tekton-hub-proxy \
+    --publish 8080:8080 \
+    --env THP_LOGGING_LEVEL=info \
+    --env THP_SERVER_HOST=0.0.0.0 \
+    --env THP_SERVER_PORT=8080 \
+    --volume /etc/tekton-hub-proxy:/root/configs:ro,Z \
+    --conmon-pidfile=%t/%n.pid \
+    --cidfile=%t/%n.cid \
+    --cgroups=no-conmon \
+    --sdnotify=conmon \
+    ghcr.io/your-org/tekton-hub-proxy:latest
+ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.cid
+ExecStopPost=-/usr/bin/podman rm --force --ignore --cidfile=%t/%n.cid
+PIDFile=%t/%n.pid
+KillMode=mixed
+SyslogIdentifier=tekton-hub-proxy
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### Using Docker
+
+Create a systemd service file (`/etc/systemd/system/tekton-hub-proxy.service`):
+
+```ini
+[Unit]
+Description=Tekton Hub Proxy Container
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+TimeoutStartSec=900
+TimeoutStopSec=120
+ExecStartPre=-/usr/bin/docker stop tekton-hub-proxy
+ExecStartPre=-/usr/bin/docker rm tekton-hub-proxy
+ExecStart=/usr/bin/docker run --rm --name tekton-hub-proxy \
+    --publish 8080:8080 \
+    --env THP_LOGGING_LEVEL=info \
+    --env THP_SERVER_HOST=0.0.0.0 \
+    --env THP_SERVER_PORT=8080 \
+    --volume /etc/tekton-hub-proxy:/root/configs:ro \
+    ghcr.io/your-org/tekton-hub-proxy:latest
+ExecStop=/usr/bin/docker stop tekton-hub-proxy
+SyslogIdentifier=tekton-hub-proxy
+User=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### Setup and Configuration
+
+1. **Create configuration directory**:
+
+   ```bash
+   sudo mkdir -p /etc/tekton-hub-proxy
+   sudo chown root:root /etc/tekton-hub-proxy
+   sudo chmod 755 /etc/tekton-hub-proxy
+   ```
+
+2. **Create configuration file** (`/etc/tekton-hub-proxy/config.yaml`):
+
+   ```yaml
+   server:
+     port: 8080
+     host: "0.0.0.0"
+
+   artifacthub:
+     base_url: "https://artifacthub.io"
+     timeout: 30s
+     max_retries: 3
+
+   catalog_mappings:
+     - tekton_hub: "tekton"
+       artifact_hub: "tekton-catalog-tasks"
+     - tekton_hub: "tekton-community"
+       artifact_hub: "tekton-catalog-community"
+
+   logging:
+     level: "info"
+     format: "json"
+   ```
+
+3. **Enable and start the service**:
+
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable tekton-hub-proxy.service
+   sudo systemctl start tekton-hub-proxy.service
+   ```
+
+4. **Check service status**:
+
+   ```bash
+   sudo systemctl status tekton-hub-proxy.service
+   sudo journalctl -u tekton-hub-proxy.service -f
+   ```
+
+#### Service Management Commands
+
+```bash
+# Start the service
+sudo systemctl start tekton-hub-proxy
+
+# Stop the service
+sudo systemctl stop tekton-hub-proxy
+
+# Restart the service
+sudo systemctl restart tekton-hub-proxy
+
+# Enable auto-start on boot
+sudo systemctl enable tekton-hub-proxy
+
+# Disable auto-start on boot
+sudo systemctl disable tekton-hub-proxy
+
+# View service logs
+sudo journalctl -u tekton-hub-proxy -f
+
+# View service status
+sudo systemctl status tekton-hub-proxy
+```
+
+#### User Service (Rootless)
+
+For running as a user service (rootless containers):
+
+1. **Create user service directory**:
+
+   ```bash
+   mkdir -p ~/.config/systemd/user
+   ```
+
+2. **Create user service file** (`~/.config/systemd/user/tekton-hub-proxy.service`):
+
+   ```ini
+   [Unit]
+   Description=Tekton Hub Proxy Container (User)
+   After=network-online.target
+   Wants=network-online.target
+
+   [Service]
+   Type=notify
+   NotifyAccess=all
+   Restart=always
+   RestartSec=5
+   ExecStartPre=-/usr/bin/podman stop tekton-hub-proxy
+   ExecStartPre=-/usr/bin/podman rm tekton-hub-proxy
+   ExecStart=/usr/bin/podman run --rm --name tekton-hub-proxy \
+       --publish 8080:8080 \
+       --env THP_LOGGING_LEVEL=info \
+       --volume %h/.config/tekton-hub-proxy:/root/configs:ro,Z \
+       --conmon-pidfile=%t/%n.pid \
+       --cidfile=%t/%n.cid \
+       --cgroups=no-conmon \
+       --sdnotify=conmon \
+       ghcr.io/your-org/tekton-hub-proxy:latest
+   ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%n.cid
+   ExecStopPost=-/usr/bin/podman rm --force --ignore --cidfile=%t/%n.cid
+   PIDFile=%t/%n.pid
+   KillMode=mixed
+
+   [Install]
+   WantedBy=default.target
+   ```
+
+3. **Manage user service**:
+
+   ```bash
+   # Reload user services
+   systemctl --user daemon-reload
+
+   # Enable and start
+   systemctl --user enable --now tekton-hub-proxy.service
+
+   # Check status
+   systemctl --user status tekton-hub-proxy.service
+
+   # View logs
+   journalctl --user -u tekton-hub-proxy.service -f
+   ```
+
 ### Cache Strategy Explanation
 
 The caching strategy is optimized based on content mutability:
