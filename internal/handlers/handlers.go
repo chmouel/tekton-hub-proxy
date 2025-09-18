@@ -46,6 +46,8 @@ func (h *Handlers) LandingPage(w http.ResponseWriter, r *http.Request) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tekton Hub to Artifact Hub Proxy</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIEJhY2tncm91bmQgY2lyY2xlIC0tPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE2IiBmaWxsPSIjNjY3ZWVhIi8+CiAgCiAgPCEtLSBUZWt0b24gbm9kZSAobGVmdCkgLS0+CiAgPGNpcmNsZSBjeD0iOCIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiM0NTUyOGQiIHN0cm9rZS13aWR0aD0iMSIvPgogIDx0ZXh0IHg9IjgiIHk9IjE4LjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI2IiBmaWxsPSIjNDU1MjhkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+VDwvdGV4dD4KICA8IS0tIEFycm93IC0tPgogIDxwYXRoIGQ9Im0xMi41IDE0IDMgMi0zIDJ2LTFoLTF2LTJ6IiBmaWxsPSIjZmZmZmZmIi8+CiAgCiAgPCEtLSBQcm94eSBub2RlIChjZW50ZXIpIC0tPgogIDxyZWN0IHg9IjEzIiB5PSIxMyIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzQ1NTI4ZCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPHRleHQgeD0iMTYiIHk9IjE3LjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI1IiBmaWxsPSIjNDU1MjhkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+UDwvdGV4dD4KICA8IS0tIEFycm93IDIgLS0+CiAgPHBhdGggZD0ibTE5LjUgMTQgMyAyLTMgMnYtMWgtMXYtMnoiIGZpbGw9IiNmZmZmZmYiLz4KICA8IS0tIEFydGlmYWN0IEh1YiBub2RlIChyaWdodCkgLS0+CiAgPGNpcmNsZSBjeD0iMjQiIGN5PSIxNiIgcj0iNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjNDU1MjhkIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8dGV4dCB4PSIyNCIgeT0iMTguNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjYiIGZpbGw9IiM0NTUyOGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIj5BPC90ZXh0Pgo8L3N2Zz4K">
+    <link rel="shortcut icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIEJhY2tncm91bmQgY2lyY2xlIC0tPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE2IiBmaWxsPSIjNjY3ZWVhIi8+CiAgCiAgPCEtLSBUZWt0b24gbm9kZSAobGVmdCkgLS0+CiAgPGNpcmNsZSBjeD0iOCIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiM0NTUyOGQiIHN0cm9rZS13aWR0aD0iMSIvPgogIDx0ZXh0IHg9IjgiIHk9IjE4LjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI2IiBmaWxsPSIjNDU1MjhkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+VDwvdGV4dD4KICA8IS0tIEFycm93IC0tPgogIDxwYXRoIGQ9Im0xMi41IDE0IDMgMi0zIDJ2LTFoLTF2LTJ6IiBmaWxsPSIjZmZmZmZmIi8+CiAgCiAgPCEtLSBQcm94eSBub2RlIChjZW50ZXIpIC0tPgogIDxyZWN0IHg9IjEzIiB5PSIxMyIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzQ1NTI4ZCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPHRleHQgeD0iMTYiIHk9IjE3LjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI1IiBmaWxsPSIjNDU1MjhkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+UDwvdGV4dD4KICA8IS0tIEFycm93IDIgLS0+CiAgPHBhdGggZD0ibTE5LjUgMTQgMyAyLTMgMnYtMWgtMXYtMnoiIGZpbGw9IiNmZmZmZmYiLz4KICA8IS0tIEFydGlmYWN0IEh1YiBub2RlIChyaWdodCkgLS0+CiAgPGNpcmNsZSBjeD0iMjQiIGN5PSIxNiIgcj0iNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjNDU1MjhkIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8dGV4dCB4PSIyNCIgeT0iMTguNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjYiIGZpbGw9IiM0NTUyOGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIj5BPC90ZXh0Pgo8L3N2Zz4K">
     <style>
         * {
             margin: 0;
@@ -207,6 +209,25 @@ func (h *Handlers) LandingPage(w http.ResponseWriter, r *http.Request) {
             font-size: 0.9rem;
         }
 
+        .disclaimer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .disclaimer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .disclaimer a:hover {
+            text-decoration: underline;
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -311,6 +332,11 @@ func (h *Handlers) LandingPage(w http.ResponseWriter, r *http.Request) {
         <div class="footer">
             <p>🚀 Ready to serve Tekton Hub API requests backed by Artifact Hub</p>
             <p>Visit <code>/health</code> for service status • <code>/v1/catalogs</code> to explore available catalogs</p>
+        </div>
+
+        <div class="disclaimer">
+            <p>Service gratuitously provided by <a href="https://pipelinesascode.com" target="_blank" rel="noopener noreferrer">pipelinesascode.com</a></p>
+            <p>No uptime guarantee • For support contact <a href="https://x.com/chmouel" target="_blank" rel="noopener noreferrer">@chmouel</a> on X</p>
         </div>
     </div>
 </body>
