@@ -32,7 +32,7 @@ clean:
 build: clean
 	@echo "building."
 	@mkdir -p $(OUTPUT_DIR)/
-	@go build  $(FLAGS)  -o $(OUTPUT_DIR)/$(NAME) ./cmd/$(NAME)/
+	@go build -v  $(FLAGS)  -o $(OUTPUT_DIR)/$(NAME) ./cmd/$(NAME)/
 
 # Run the application
 run: build

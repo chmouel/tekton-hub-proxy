@@ -38,6 +38,7 @@ func main() {
 		fmt.Println("enabling compatibility between systems while leveraging Artifact Hub's powerful catalog.")
 		fmt.Println()
 		fmt.Println("Usage:")
+		flag.CommandLine.SetOutput(os.Stdout)
 		flag.PrintDefaults()
 		fmt.Println()
 		fmt.Println("Configuration:")
