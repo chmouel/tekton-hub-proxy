@@ -73,7 +73,7 @@ func LoadWithPath(configPath string) (*Config, error) {
 	viper.SetDefault("artifacthub.timeout", "30s")
 	viper.SetDefault("artifacthub.max_retries", 3)
 	viper.SetDefault("artifacthub.cache.enabled", true)
-	viper.SetDefault("artifacthub.cache.ttl", "5m")
+	viper.SetDefault("artifacthub.cache.ttl", "1h")
 	viper.SetDefault("artifacthub.cache.max_size", 2000)
 	viper.SetDefault("logging.level", "info")
 	viper.SetDefault("logging.format", "json")

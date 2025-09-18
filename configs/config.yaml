@@ -6,6 +6,10 @@ artifacthub:
   base_url: "https://artifacthub.io"
   timeout: 30s
   max_retries: 3
+  cache:
+    enabled: true
+    ttl: 1h
+    max_size: 2000
 
 catalog_mappings:
   - tekton_hub: "tekton"
