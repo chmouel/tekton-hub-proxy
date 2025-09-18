@@ -293,8 +293,8 @@ func (h *Handlers) LandingPage(w http.ResponseWriter, r *http.Request) {
 
         <h1>Tekton Hub to Artifact Hub Proxy</h1>
         <p class="subtitle">
-            A seamless translation proxy that bridges Tekton Hub API calls to Artifact Hub,
-            enabling compatibility between systems while leveraging Artifact Hub's powerful catalog.
+            A transition proxy that bridges Tekton Hub API calls to Artifact Hub.
+            <strong>For migration assistance only</strong> - users should transition to using Artifact Hub directly.
         </p>
 
         <div class="features">
@@ -327,6 +327,63 @@ func (h *Handlers) LandingPage(w http.ResponseWriter, r *http.Request) {
             <div class="endpoint"><span class="method">GET</span>/v1/resource/{catalog}/{kind}/{name}</div>
             <div class="endpoint"><span class="method">GET</span>/v1/resource/{catalog}/{kind}/{name}/{version}</div>
             <div class="endpoint"><span class="method">GET</span>/health</div>
+        </div>
+
+        <div class="api-endpoints">
+            <h3>🧪 Testing with <a href="https://tekton.dev/docs/pipelines/hub-resolver/">Tekton Hub Resolver</a></h3>
+            <p style="margin-bottom: 1rem; color: #4a5568; font-size: 0.9rem;">Configure your Tekton Hub Resolver to use this proxy, then test with a simple PipelineRun:</p>
+
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h4 style="color: #2d3748; margin-bottom: 0.5rem; font-size: 0.9rem;">1. Configure Tekton Hub Resolver:</h4>
+                <div class="endpoint" style="font-size: 0.8rem; margin: 0;">
+                    kubectl set env -n tekton-pipelines-resolvers deployments.app/tekton-pipelines-remote-resolvers TEKTON_HUB_API=https://tknhub.pipelinesascode.com/
+                </div>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                <h4 style="color: #2d3748; margin-bottom: 0.5rem; font-size: 0.9rem;">2. Test with Example PipelineRun:</h4>
+                <pre style="background: white; padding: 0.75rem; border-radius: 4px; font-size: 0.7rem; color: #4a5568; margin: 0; overflow-x: auto; border-left: 3px solid #667eea;">apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: hub-test-
+spec:
+  pipelineSpec:
+    tasks:
+      - name: fetch-repo
+        taskRef:
+          resolver: hub
+          params:
+            - name: kind
+              value: task
+            - name: name
+              value: tkn
+            - name: version
+              value: "0.4"
+            - name: type
+              value: tekton
+            - name: catalog
+              value: tekton</pre>
+            </div>
+        </div>
+
+        <div class="api-endpoints">
+						<h3>🚀 Testing with <a href="https://pipelinesascode.com/">Pipelines-as-Code</a></h3>
+            <p style="margin-bottom: 1rem; color: #4a5568; font-size: 0.9rem;">
+                <strong>Note:</strong> Latest Pipelines-as-Code versions automatically use Artifact Hub.
+                This configuration is only needed for older versions that cannot be upgraded:
+            </p>
+
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h4 style="color: #2d3748; margin-bottom: 0.5rem; font-size: 0.9rem;">Add to PaC ConfigMap:</h4>
+                <pre style="background: white; padding: 0.75rem; border-radius: 4px; font-size: 0.7rem; color: #4a5568; margin: 0; overflow-x: auto; border-left: 3px solid #667eea;">hub-url: https://tknhub.pipelinesascode.com/
+hub-catalog-type: tektonhub</pre>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                <p style="color: #4a5568; font-size: 0.8rem; margin: 0;">
+                    See <a href="https://pipelinesascode.com/docs/install/settings/" target="_blank" rel="noopener noreferrer" style="color: #667eea;">PaC Settings Documentation</a> for complete configuration details.
+                </p>
+            </div>
         </div>
 
         <div class="footer">

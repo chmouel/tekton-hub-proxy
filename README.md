@@ -3,8 +3,12 @@
 # Tekton Hub to Artifact Hub Translation Proxy
 
 A Go-based HTTP proxy that translates Tekton Hub API calls to Artifact Hub
-format, enabling seamless integration between systems expecting Tekton Hub API
-while using Artifact Hub as the backend.
+format. **This proxy is intended for migration assistance only** - users should
+transition to using Artifact Hub directly as modern Tekton tooling supports it natively.
+
+> **⚠️ Migration Notice**: This proxy is a temporary solution for transitioning from Tekton Hub to Artifact Hub.
+> Modern versions of Tekton Pipelines and Pipelines-as-Code support Artifact Hub natively.
+> Please consider upgrading your tooling and migrating to Artifact Hub directly.
 
 ## Features
 
@@ -176,6 +180,274 @@ Options:
      -v $(pwd)/custom-config.yaml:/root/configs/config.yaml \
      tekton-hub-proxy
    ```
+
+## Testing with [Tekton Hub Resolver](https://tekton.dev/docs/pipelines/hub-resolver/)
+
+To test the proxy with Tekton Pipelines, you need to configure the [Tekton Hub Resolver](https://tekton.dev/docs/pipelines/hub-resolver/) to use your proxy instance instead of the default Tekton Hub.
+
+### Prerequisites
+
+- A Kubernetes cluster with Tekton Pipelines installed
+- `kubectl` configured to access your cluster
+- The proxy running and accessible from your cluster
+
+### Configuration Steps
+
+1. **Configure the Tekton Hub Resolver**:
+
+   Point the [Tekton Hub Resolver](https://tekton.dev/docs/pipelines/hub-resolver/) to use your proxy instance:
+
+   ```bash
+   kubectl set env -n tekton-pipelines-resolvers \
+     deployments.app/tekton-pipelines-remote-resolvers \
+     TEKTON_HUB_API=https://tknhub.pipelinesascode.com/
+   ```
+
+   Replace `https://tknhub.pipelinesascode.com/` with your actual proxy URL.
+
+2. **Verify the Configuration**:
+
+   Check that the environment variable is set:
+
+   ```bash
+   kubectl get deployment -n tekton-pipelines-resolvers tekton-pipelines-remote-resolvers -o yaml | grep TEKTON_HUB_API
+   ```
+
+### Test Example
+
+Create a simple test PipelineRun to verify the proxy is working:
+
+```yaml
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: hub-test-
+spec:
+  pipelineSpec:
+    tasks:
+      - name: test-task
+        taskRef:
+          resolver: hub
+          params:
+            - name: kind
+              value: task
+            - name: name
+              value: tkn
+            - name: version
+              value: "0.4"
+            - name: type
+              value: tekton
+            - name: catalog
+              value: tekton
+        params:
+          - name: ARGS
+            value:
+              - version
+```
+
+### Running the Test
+
+1. **Save the PipelineRun** to a file (e.g., `test-pipelinerun.yaml`)
+
+2. **Apply the PipelineRun**:
+
+   ```bash
+   kubectl apply -f test-pipelinerun.yaml
+   ```
+
+3. **Monitor the PipelineRun**:
+
+   ```bash
+   kubectl get pipelineruns
+   kubectl logs -f pipelinerun/hub-test-xxxxx
+   ```
+
+### Expected Results
+
+If the proxy is working correctly:
+
+- The PipelineRun should start successfully
+- The task should be resolved from Artifact Hub via your proxy
+- You should see logs indicating the task is running
+- The proxy logs should show the API requests being handled
+
+### Troubleshooting
+
+- **PipelineRun fails to start**: Check proxy accessibility and configuration
+- **Task resolution errors**: Verify catalog mappings in proxy configuration
+- **Connection timeouts**: Ensure network connectivity between cluster and proxy
+- **Check proxy logs** for detailed error information
+
+### Alternative Test Methods
+
+You can also test the proxy directly using curl:
+
+```bash
+# Test health endpoint
+curl https://tknhub.pipelinesascode.com/health
+
+# Test catalog listing
+curl https://tknhub.pipelinesascode.com/v1/catalogs
+
+# Test specific task resolution
+curl https://tknhub.pipelinesascode.com/v1/resource/tekton/task/tkn
+```
+
+## Testing with [Pipelines-as-Code](https://pipelinesascode.com/)
+
+**Important Note**: Latest versions of [Pipelines-as-Code](https://pipelinesascode.com/) automatically use Artifact Hub by default. This configuration is only needed for older PaC versions that cannot be upgraded.
+
+[Pipelines-as-Code (PaC)](https://pipelinesascode.com/) supports fetching tasks and pipelines from remote hub catalogs. You can configure older PaC versions to use this proxy as a custom hub for task resolution.
+
+### Configuration
+
+To configure PaC to use your proxy, you need to modify the PaC ConfigMap with the following settings:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipelines-as-code
+  namespace: pipelines-as-code
+data:
+  # Configure the proxy as a custom hub
+  hub-url: https://tknhub.pipelinesascode.com/
+  hub-catalog-name: tekton
+  hub-catalog-type: tektonhub
+```
+
+### Configuration Options
+
+Based on the [PaC Settings Documentation](https://pipelinesascode.com/docs/install/settings/), the following options are available:
+
+- **`hub-url`**: The base URL for the hub API. Set this to your proxy URL (e.g., `https://tknhub.pipelinesascode.com/`)
+- **`hub-catalog-name`**: The catalog name in the hub. For this proxy, use `tekton`
+- **`hub-catalog-type`**: The type of hub catalog. Set to `tektonhub` to use Tekton Hub format
+
+### Multiple Hub Configuration
+
+You can also configure multiple hubs including this proxy as an additional catalog:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipelines-as-code
+  namespace: pipelines-as-code
+data:
+  # Default Artifact Hub (implicit)
+  # ... other configurations ...
+
+  # Custom proxy hub
+  catalog-1-id: "proxy"
+  catalog-1-name: "tekton"
+  catalog-1-url: "https://tknhub.pipelinesascode.com/"
+  catalog-1-type: "tektonhub"
+```
+
+### Using the Proxy in PaC
+
+Once configured, you can reference tasks from the proxy in your `.tekton` pipeline files:
+
+#### With default hub configuration:
+```yaml
+# This will use the configured default hub (your proxy)
+pipelineSpec:
+  tasks:
+    - name: task-from-proxy
+      taskRef:
+        resolver: hub
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: tkn
+          - name: version
+            value: "0.4"
+          - name: catalog
+            value: tekton
+```
+
+#### With multiple hub configuration:
+```yaml
+# This will use the proxy hub explicitly
+pipelineSpec:
+  tasks:
+    - name: task-from-proxy
+      taskRef:
+        resolver: hub
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: tkn
+          - name: version
+            value: "0.4"
+          - name: catalog
+            value: tekton
+          - name: hub
+            value: proxy  # References catalog-1-id
+```
+
+### Applying the Configuration
+
+1. **Save the ConfigMap** to a file (e.g., `pac-config.yaml`)
+
+2. **Apply the configuration**:
+   ```bash
+   kubectl apply -f pac-config.yaml
+   ```
+
+3. **Restart PaC controller** (if needed):
+   ```bash
+   kubectl rollout restart deployment/pipelines-as-code-controller -n pipelines-as-code
+   ```
+
+### Verification
+
+To verify the configuration is working:
+
+1. **Check PaC logs** for any configuration errors:
+   ```bash
+   kubectl logs deployment/pipelines-as-code-controller -n pipelines-as-code
+   ```
+
+2. **Test with a simple pipeline** that references a task from your proxy
+
+3. **Monitor proxy logs** to see requests from PaC
+
+For more details on PaC configuration, see the [official settings documentation](https://pipelinesascode.com/docs/install/settings/).
+
+## Migration Guidance
+
+This proxy is designed as a temporary bridge during the transition from Tekton Hub to Artifact Hub. Here's how to migrate away from this proxy:
+
+### For Tekton Pipelines Hub Resolver
+
+**Modern Approach**: Configure the Hub Resolver to use Artifact Hub directly:
+
+```bash
+kubectl set env -n tekton-pipelines-resolvers \
+  deployments.app/tekton-pipelines-remote-resolvers \
+  TEKTON_HUB_API=https://artifacthub.io
+```
+
+**Update your PipelineRuns** to use Artifact Hub catalog names:
+- Change `catalog: tekton` to `catalog: tekton-catalog-tasks`
+- Ensure you're using full semantic versions (e.g., `0.4.0` instead of `0.4`)
+
+### For Pipelines-as-Code
+
+**Modern Approach**: Upgrade to the latest Pipelines-as-Code version which uses Artifact Hub by default. No additional configuration needed.
+
+**If upgrade isn't possible**, use this proxy as documented above.
+
+### Direct API Usage
+
+**Modern Approach**: Update your applications to use the Artifact Hub API directly:
+- Base URL: `https://artifacthub.io/api/v1/packages/tekton-task/tekton-catalog-tasks/`
+- Use full semantic versioning
+- Adapt to Artifact Hub response format
 
 ## Reverse Proxy Deployment
 
