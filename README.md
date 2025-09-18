@@ -1321,9 +1321,46 @@ All requests are logged with:
 - Remote address
 - User agent
 
+## Security
+
+This proxy is designed with security in mind:
+
+### Security Features
+
+- **Read-only Architecture**: The proxy only performs GET requests to Artifact Hub, eliminating many attack vectors
+- **Input Validation**: Proper validation of path parameters, query strings, and route constraints
+- **Structured Error Handling**: Error responses don't leak sensitive internal information
+- **Panic Recovery**: Middleware prevents application crashes from unhandled panics
+- **Dependency Management**: Uses well-maintained, up-to-date dependencies
+
+### Security Considerations
+
+- **CORS Policy**: Currently configured with permissive CORS (`*`) - consider restricting to trusted origins in production
+- **Rate Limiting**: No built-in rate limiting - recommend implementing at reverse proxy level for production use
+- **Security Headers**: Consider adding security headers (CSP, HSTS, etc.) via reverse proxy
+- **Logging**: Debug logs may contain internal paths - use appropriate log levels in production
+
+### Production Security Recommendations
+
+1. **Deploy behind a reverse proxy** (Nginx/Caddy) with:
+   - SSL/TLS termination
+   - Rate limiting
+   - Security headers
+   - Restricted CORS origins
+
+2. **Network Security**:
+   - Restrict outbound traffic to `artifacthub.io`
+   - Use container security scanning
+   - Keep dependencies updated
+
+3. **Monitoring**:
+   - Monitor for unusual request patterns
+   - Set up log aggregation
+   - Track cache hit/miss ratios
+
 ## Limitations
 
-- **ID-based lookups**: Endpoints requiring specific IDs return `501 Not  
+- **ID-based lookups**: Endpoints requiring specific IDs return `501 Not
   Implemented` as Artifact Hub doesn't provide direct ID mapping
 - **Category/Tag mapping**: Basic keyword-based mapping is used
 - **Platform support**: Defaults to `linux/amd64`
