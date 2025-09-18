@@ -1,3 +1,5 @@
+[![Claude](https://img.shields.io/badge/Claude-D97757?logo=claude&logoColor=fff)](#) [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-886FBF?logo=googlegemini&logoColor=fff)](#)
+
 # Tekton Hub to Artifact Hub Translation Proxy
 
 A Go-based HTTP proxy that translates Tekton Hub API calls to Artifact Hub
