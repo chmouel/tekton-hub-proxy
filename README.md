@@ -82,6 +82,9 @@ catalog_mappings:
 logging:
   level: "info"
   format: "json"
+
+landing_page:
+  enabled: true  # Set to false to disable the landing page
 ```
 
 ### Environment Variables
@@ -92,6 +95,35 @@ All configuration can be overridden with environment variables using the `THP_` 
 - `THP_SERVER_HOST=192.168.1.100`
 - `THP_ARTIFACTHUB_BASE_URL=https://artifacthub.io`
 - `THP_LOGGING_LEVEL=debug`
+- `THP_LANDING_PAGE_ENABLED=false`
+
+### Command Line Flags
+
+The application supports several command line flags:
+
+```bash
+./bin/tekton-hub-proxy [options]
+
+Options:
+  --config string               Path to config file
+  --port int                   Server port (overrides config)
+  --bind string                Bind address (overrides config)
+  --debug                      Enable debug logging
+  --disable-landing-page       Disable the landing page at root path (/)
+  --help                       Show help message
+```
+
+**Examples**:
+```bash
+# Start with custom port and disabled landing page
+./bin/tekton-hub-proxy --port 9090 --disable-landing-page
+
+# Start with debug logging and custom config
+./bin/tekton-hub-proxy --debug --config /path/to/config.yaml
+
+# Show help
+./bin/tekton-hub-proxy --help
+```
 
 ## Quick Start
 
@@ -149,6 +181,8 @@ All configuration can be overridden with environment variables using the `THP_` 
 
 For production deployments, it's recommended to deploy the proxy behind a reverse proxy like Nginx or Caddy for SSL termination, load balancing, and aggressive caching.
 
+**Note**: The configurations below include the landing page route (`/`). If you disable the landing page using `--disable-landing-page`, remove the corresponding location/handle block from your reverse proxy configuration.
+
 ### Nginx Deployment
 
 Create an Nginx configuration file (`/etc/nginx/sites-available/tekton-hub-proxy`):
@@ -178,7 +212,22 @@ server {
 
     # Gzip compression
     gzip on;
-    gzip_types text/plain application/json application/yaml text/yaml;
+    gzip_types text/plain application/json application/yaml text/yaml text/html;
+
+    # Landing page (optional - can be disabled)
+    location = / {
+        proxy_pass http://tekton_hub_proxy;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Short cache for landing page
+        proxy_cache tekton_hub;
+        proxy_cache_valid 200 1h;
+        proxy_cache_use_stale error timeout invalid_header updating;
+        add_header X-Cache-Status $upstream_cache_status;
+    }
 
     location /health {
         proxy_pass http://tekton_hub_proxy;
@@ -295,6 +344,12 @@ Create a Caddyfile:
 tekton-hub.example.com {
     # Enable compression
     encode gzip
+
+    # Landing page (optional - can be disabled with --disable-landing-page)
+    handle / {
+        reverse_proxy localhost:8080
+        header Cache-Control "public, max-age=3600, stale-while-revalidate=600"
+    }
 
     # Health check with short cache
     handle /health {
