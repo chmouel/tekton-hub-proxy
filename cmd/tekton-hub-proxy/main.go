@@ -108,6 +108,7 @@ func main() {
 		catalogTranslator,
 		responseTranslator,
 		versionTranslator,
+		cfg,
 	)
 
 	// Setup routes

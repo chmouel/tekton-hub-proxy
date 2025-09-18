@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"tekton-hub-proxy/internal/client"
+	"tekton-hub-proxy/internal/config"
 	"tekton-hub-proxy/internal/models"
 	"tekton-hub-proxy/internal/translator"
 
@@ -17,6 +18,7 @@ type Handlers struct {
 	catalogTranslator  *translator.CatalogTranslator
 	responseTranslator *translator.ResponseTranslator
 	versionTranslator  *translator.VersionTranslator
+	config             *config.Config
 }
 
 func NewHandlers(
@@ -24,12 +26,14 @@ func NewHandlers(
 	catalogTranslator *translator.CatalogTranslator,
 	responseTranslator *translator.ResponseTranslator,
 	versionTranslator *translator.VersionTranslator,
+	config *config.Config,
 ) *Handlers {
 	return &Handlers{
 		artifactHubClient:  artifactHubClient,
 		catalogTranslator:  catalogTranslator,
 		responseTranslator: responseTranslator,
 		versionTranslator:  versionTranslator,
+		config:             config,
 	}
 }
 
@@ -316,7 +320,7 @@ func (h *Handlers) LandingPage(w http.ResponseWriter, r *http.Request) {
             <div class="feature">
                 <div class="feature-icon">⚡</div>
                 <h3>High Performance</h3>
-                <p>Built with Go for optimal performance and minimal resource usage</p>
+                <p>Built with Go for optimal performance and includes intelligent caching with {{.CacheTTL}} TTL to Artifact Hub</p>
             </div>
         </div>
 
@@ -386,6 +390,18 @@ hub-catalog-type: tektonhub</pre>
             </div>
         </div>
 
+        <div class="cache-warning">
+            <h3 style="color: #f56565; margin-bottom: 1rem; display: flex; align-items: center;">
+                <span style="margin-right: 0.5rem;">⚠️</span>
+                Cache Notice
+            </h3>
+            <p style="background: #fed7d7; color: #742a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; line-height: 1.5;">
+                <strong>Important:</strong> This proxy caches Artifact Hub responses for {{.CacheTTL}} to improve performance.
+                If tasks or pipelines are updated in Artifact Hub, you may see stale data until the cache expires.
+								For critical updates, switch to use https://artifacthub.io/ directly.
+            </p>
+        </div>
+
         <div class="footer">
             <p>🚀 Ready to serve Tekton Hub API requests backed by Artifact Hub</p>
             <p>Visit <code>/health</code> for service status • <code>/v1/catalogs</code> to explore available catalogs</p>
@@ -407,7 +423,13 @@ hub-catalog-type: tektonhub</pre>
 		return
 	}
 
-	if err := t.Execute(w, nil); err != nil {
+	data := struct {
+		CacheTTL string
+	}{
+		CacheTTL: h.config.ArtifactHub.Cache.TTL.String(),
+	}
+
+	if err := t.Execute(w, data); err != nil {
 		logrus.WithError(err).Error("Failed to execute landing page template")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
