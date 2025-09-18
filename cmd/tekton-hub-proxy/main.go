@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -23,6 +24,9 @@ func main() {
 		port              = flag.Int("port", 0, "Server port (overrides config)")
 		bindAddr          = flag.String("bind", "", "Bind address (overrides config)")
 		disableLandingPage = flag.Bool("disable-landing-page", false, "Disable the landing page at root path (/)")
+		disableCache      = flag.Bool("disable-cache", false, "Disable API response caching")
+		cacheTTL          = flag.String("cache-ttl", "", "Cache TTL duration (e.g., 5m, 10m) (overrides config)")
+		cacheMaxSize      = flag.Int("cache-max-size", 0, "Maximum number of cache entries (overrides config)")
 		help              = flag.Bool("help", false, "Show help message")
 	)
 	flag.Parse()
@@ -37,11 +41,17 @@ func main() {
 		flag.PrintDefaults()
 		fmt.Println()
 		fmt.Println("Configuration:")
-		fmt.Println("  The landing page can also be disabled via configuration file:")
-		fmt.Println("  landing_page:")
-		fmt.Println("    enabled: false")
+		fmt.Println("  Cache settings can be configured via config file:")
+		fmt.Println("  artifacthub:")
+		fmt.Println("    cache:")
+		fmt.Println("      enabled: true")
+		fmt.Println("      ttl: 5m")
+		fmt.Println("      max_size: 2000")
 		fmt.Println()
-		fmt.Println("  Or via environment variable:")
+		fmt.Println("  Or via environment variables:")
+		fmt.Println("  THP_ARTIFACTHUB_CACHE_ENABLED=true")
+		fmt.Println("  THP_ARTIFACTHUB_CACHE_TTL=5m")
+		fmt.Println("  THP_ARTIFACTHUB_CACHE_MAX_SIZE=2000")
 		fmt.Println("  THP_LANDING_PAGE_ENABLED=false")
 		os.Exit(0)
 	}
@@ -64,6 +74,19 @@ func main() {
 	}
 	if *disableLandingPage {
 		cfg.LandingPage.Enabled = false
+	}
+	if *disableCache {
+		cfg.ArtifactHub.Cache.Enabled = false
+	}
+	if *cacheTTL != "" {
+		if ttl, err := time.ParseDuration(*cacheTTL); err == nil {
+			cfg.ArtifactHub.Cache.TTL = ttl
+		} else {
+			logrus.Warnf("Invalid cache TTL duration %q, using config default", *cacheTTL)
+		}
+	}
+	if *cacheMaxSize > 0 {
+		cfg.ArtifactHub.Cache.MaxSize = *cacheMaxSize
 	}
 
 	// Setup logging

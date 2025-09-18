@@ -29,6 +29,13 @@ type ArtifactHubConfig struct {
 	BaseURL    string        `mapstructure:"base_url"`
 	Timeout    time.Duration `mapstructure:"timeout"`
 	MaxRetries int           `mapstructure:"max_retries"`
+	Cache      CacheConfig   `mapstructure:"cache"`
+}
+
+type CacheConfig struct {
+	Enabled  bool          `mapstructure:"enabled"`
+	TTL      time.Duration `mapstructure:"ttl"`
+	MaxSize  int           `mapstructure:"max_size"`
 }
 
 type LoggingConfig struct {
@@ -65,6 +72,9 @@ func LoadWithPath(configPath string) (*Config, error) {
 	viper.SetDefault("artifacthub.base_url", "https://artifacthub.io")
 	viper.SetDefault("artifacthub.timeout", "30s")
 	viper.SetDefault("artifacthub.max_retries", 3)
+	viper.SetDefault("artifacthub.cache.enabled", true)
+	viper.SetDefault("artifacthub.cache.ttl", "5m")
+	viper.SetDefault("artifacthub.cache.max_size", 2000)
 	viper.SetDefault("logging.level", "info")
 	viper.SetDefault("logging.format", "json")
 	viper.SetDefault("landing_page.enabled", true)
