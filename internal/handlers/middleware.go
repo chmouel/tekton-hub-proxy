@@ -87,7 +87,8 @@ func (h *Handlers) SecurityMiddleware(next http.Handler) http.Handler {
 
 		// A strong Content Security Policy helps to prevent a wide range of attacks,
 		// including Cross-Site Scripting (XSS) and other code injection attacks.
-		w.Header().Set("Content-Security-Policy", "default-src 'self'")
+		csp := "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://tekton.dev https://www.cncf.io;"
+		w.Header().Set("Content-Security-Policy", csp)
 
 		// Enables the Cross-site scripting (XSS) filter built into most recent web browsers.
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
