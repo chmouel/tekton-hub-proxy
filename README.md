@@ -636,25 +636,25 @@ tekton-hub.example.com {
     }
 
     # YAML content with very long cache (immutable)
-    handle_path /v1/resource/*/*/yaml {
+    handle /v1/resource/*/*/yaml {
         reverse_proxy localhost:8080
         header Cache-Control "public, max-age=604800, immutable"
     }
 
     # Raw YAML content with very long cache
-    handle_path /v1/resource/*/raw {
+    handle /v1/resource/*/raw {
         reverse_proxy localhost:8080
         header Cache-Control "public, max-age=604800, immutable"
     }
 
     # README content with medium cache
-    handle_path /v1/resource/*/*/readme {
+    handle /v1/resource/*/*/readme {
         reverse_proxy localhost:8080
         header Cache-Control "public, max-age=86400, stale-while-revalidate=3600"
     }
 
     # Resource metadata with medium cache
-    handle_path /v1/resource/* {
+    handle /v1/resource/* {
         reverse_proxy localhost:8080
         header Cache-Control "public, max-age=21600, stale-while-revalidate=3600"
     }
