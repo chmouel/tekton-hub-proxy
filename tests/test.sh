@@ -75,6 +75,42 @@ validate_yaml_content() {
     fi
 }
 
+validate_landing_page() {
+    log "Validating landing page content"
+
+    response=$(curl -s "$BASE_URL/" 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        error "Landing page validation - Could not reach landing page"
+        return 0
+    fi
+
+    # Check for key content in the landing page
+    if echo "$response" | grep -q "Tekton Hub to Artifact Hub Proxy" 2>/dev/null; then
+        success "Landing page validation - Title present"
+    else
+        error "Landing page validation - Missing title"
+        return 0
+    fi
+
+    if echo "$response" | grep -q "tekton.dev" 2>/dev/null; then
+        success "Landing page validation - Tekton logo link present"
+    else
+        error "Landing page validation - Missing Tekton logo link"
+    fi
+
+    if echo "$response" | grep -q "artifacthub.io" 2>/dev/null; then
+        success "Landing page validation - Artifact Hub logo link present"
+    else
+        error "Landing page validation - Missing Artifact Hub logo link"
+    fi
+
+    if echo "$response" | grep -q "/v1/catalogs" 2>/dev/null; then
+        success "Landing page validation - API endpoints documented"
+    else
+        error "Landing page validation - Missing API endpoint documentation"
+    fi
+}
+
 validate_translation() {
     log "Validating translation against Artifact Hub"
 
@@ -108,8 +144,11 @@ echo "Based on Tekton Hub resolver requirements from s.xml"
 echo
 
 # Core endpoints that Tekton Hub resolver actually uses
-echo "1️⃣  CORE RESOLVER ENDPOINTS"
-echo "----------------------------"
+echo "1️⃣  LANDING PAGE AND CORE ENDPOINTS"
+echo "-----------------------------------"
+
+test_endpoint "Landing Page" \
+    "$BASE_URL/" "" "200"
 
 test_endpoint "Health Check" \
     "$BASE_URL/health" ".status"
@@ -177,7 +216,13 @@ test_endpoint "Invalid catalog" \
     "$BASE_URL/v1/resource/invalid-catalog/task/git-clone" "" "404"
 
 echo
-echo "6️⃣  RESPONSE FORMAT VALIDATION"
+echo "6️⃣  LANDING PAGE VALIDATION"
+echo "---------------------------"
+
+validate_landing_page
+
+echo
+echo "7️⃣  RESPONSE FORMAT VALIDATION"
 echo "------------------------------"
 
 validate_yaml_content "$BASE_URL/v1/resource/tekton/task/git-clone/0.1/yaml"
@@ -195,15 +240,42 @@ else
 fi
 
 echo
-echo "7️⃣  TRANSLATION VERIFICATION"
+echo "8️⃣  TRANSLATION VERIFICATION"
 echo "----------------------------"
 
 validate_translation
 
 echo
-echo "8️⃣  MANUAL CURL COMMANDS"
+echo "9️⃣  CONFIGURATION TESTING"
+echo "-------------------------"
+
+log "Testing help documentation"
+if ./bin/tekton-hub-proxy --help 2>/dev/null | grep -q "disable-landing-page"; then
+    success "Help documentation - Landing page flag documented"
+else
+    error "Help documentation - Landing page flag not documented"
+fi
+
+log "Testing landing page disable functionality"
+echo "Note: To test --disable-landing-page flag, run:"
+echo "  ./bin/tekton-hub-proxy --disable-landing-page --port 8081 &"
+echo "  curl -w \"HTTP: %{http_code}\\n\" http://localhost:8081/"
+echo "  # Should return 404 Not Found"
+echo "  pkill -f 'tekton-hub-proxy.*8081'"
+echo
+
+log "Configuration options available:"
+echo "  Command line: --disable-landing-page"
+echo "  Config file:  landing_page.enabled: false"
+echo "  Environment:  THP_LANDING_PAGE_ENABLED=false"
+
+echo
+echo "🔟  MANUAL CURL COMMANDS"
 echo "------------------------"
 echo "For manual testing, use these exact commands:"
+echo
+echo "# Landing page:"
+echo "curl $BASE_URL/"
 echo
 echo "# Core resolver endpoints:"
 echo "curl $BASE_URL/v1/resource/tekton/task/git-clone"
@@ -216,6 +288,10 @@ echo "curl -s $BASE_URL/v1/resource/tekton/task/git-clone | jq '.data.name'"
 echo
 echo "# Error testing:"
 echo "curl -w \"HTTP: %{http_code}\\n\" $BASE_URL/v1/resource/tekton/task/non-existent"
+echo
+echo "# Configuration testing:"
+echo "./bin/tekton-hub-proxy --help | grep disable-landing-page"
+echo "./bin/tekton-hub-proxy --disable-landing-page --port 8081 &"
 
 echo
 echo "=================================================="

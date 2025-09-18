@@ -12,6 +12,7 @@ type Config struct {
 	ArtifactHub     ArtifactHubConfig        `mapstructure:"artifacthub"`
 	CatalogMappings []CatalogMapping         `mapstructure:"catalog_mappings"`
 	Logging         LoggingConfig            `mapstructure:"logging"`
+	LandingPage     LandingPageConfig        `mapstructure:"landing_page"`
 }
 
 type CatalogMapping struct {
@@ -33,6 +34,10 @@ type ArtifactHubConfig struct {
 type LoggingConfig struct {
 	Level  string `mapstructure:"level"`
 	Format string `mapstructure:"format"`
+}
+
+type LandingPageConfig struct {
+	Enabled bool `mapstructure:"enabled"`
 }
 
 func Load() (*Config, error) {
@@ -62,6 +67,7 @@ func LoadWithPath(configPath string) (*Config, error) {
 	viper.SetDefault("artifacthub.max_retries", 3)
 	viper.SetDefault("logging.level", "info")
 	viper.SetDefault("logging.format", "json")
+	viper.SetDefault("landing_page.enabled", true)
 
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)

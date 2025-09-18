@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 	"tekton-hub-proxy/internal/client"
 	"tekton-hub-proxy/internal/models"
@@ -36,6 +37,297 @@ func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "healthy"})
+}
+
+func (h *Handlers) LandingPage(w http.ResponseWriter, r *http.Request) {
+	tmpl := `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tekton Hub to Artifact Hub Proxy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 90%;
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .logo-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            transition: transform 0.2s;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .arrow {
+            font-size: 2rem;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature h3 {
+            color: #2d3748;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature p {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .api-endpoints {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .api-endpoints h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .endpoint {
+            background: white;
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .method {
+            color: #38a169;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            background: #48bb78;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .logo-section {
+                gap: 1rem;
+            }
+
+            .logo {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            Service Running
+        </div>
+
+        <div class="logo-section">
+            <a href="https://tekton.dev" target="_blank" rel="noopener noreferrer">
+                <img src="https://tekton.dev/images/tekton-horizontal-color.png" alt="Tekton Logo" class="logo" style="width: 160px;">
+            </a>
+            <div class="arrow">→</div>
+            <a href="https://artifacthub.io" target="_blank" rel="noopener noreferrer">
+                <img src="https://www.cncf.io/wp-content/uploads/2023/04/artifacthub-horizontal-color.svg" alt="Artifact Hub Logo" class="logo">
+            </a>
+        </div>
+
+        <h1>Tekton Hub to Artifact Hub Proxy</h1>
+        <p class="subtitle">
+            A seamless translation proxy that bridges Tekton Hub API calls to Artifact Hub,
+            enabling compatibility between systems while leveraging Artifact Hub's powerful catalog.
+        </p>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <h3>API Translation</h3>
+                <p>Converts Tekton Hub API endpoints to Artifact Hub format automatically</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🗂️</div>
+                <h3>Catalog Mapping</h3>
+                <p>Configurable mapping between Tekton Hub and Artifact Hub catalog names</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📦</div>
+                <h3>Version Conversion</h3>
+                <p>Handles conversion between simplified semver (0.1) and full semver (0.1.0)</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>High Performance</h3>
+                <p>Built with Go for optimal performance and minimal resource usage</p>
+            </div>
+        </div>
+
+        <div class="api-endpoints">
+            <h3>Available API Endpoints</h3>
+            <div class="endpoint"><span class="method">GET</span>/v1/catalogs</div>
+            <div class="endpoint"><span class="method">GET</span>/v1/resources</div>
+            <div class="endpoint"><span class="method">GET</span>/v1/resource/{catalog}/{kind}/{name}</div>
+            <div class="endpoint"><span class="method">GET</span>/v1/resource/{catalog}/{kind}/{name}/{version}</div>
+            <div class="endpoint"><span class="method">GET</span>/health</div>
+        </div>
+
+        <div class="footer">
+            <p>🚀 Ready to serve Tekton Hub API requests backed by Artifact Hub</p>
+            <p>Visit <code>/health</code> for service status • <code>/v1/catalogs</code> to explore available catalogs</p>
+        </div>
+    </div>
+</body>
+</html>`
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	t, err := template.New("landing").Parse(tmpl)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to parse landing page template")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := t.Execute(w, nil); err != nil {
+		logrus.WithError(err).Error("Failed to execute landing page template")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func (h *Handlers) ListCatalogs(w http.ResponseWriter, r *http.Request) {

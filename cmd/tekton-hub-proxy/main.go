@@ -18,19 +18,31 @@ import (
 func main() {
 	// Parse command line flags
 	var (
-		debug      = flag.Bool("debug", false, "Enable debug logging")
-		configPath = flag.String("config", "", "Path to config file")
-		port       = flag.Int("port", 0, "Server port (overrides config)")
-		bindAddr   = flag.String("bind", "", "Bind address (overrides config)")
-		help       = flag.Bool("help", false, "Show help message")
+		debug             = flag.Bool("debug", false, "Enable debug logging")
+		configPath        = flag.String("config", "", "Path to config file")
+		port              = flag.Int("port", 0, "Server port (overrides config)")
+		bindAddr          = flag.String("bind", "", "Bind address (overrides config)")
+		disableLandingPage = flag.Bool("disable-landing-page", false, "Disable the landing page at root path (/)")
+		help              = flag.Bool("help", false, "Show help message")
 	)
 	flag.Parse()
 
 	if *help {
 		fmt.Println("Tekton Hub to Artifact Hub Translation Proxy")
 		fmt.Println()
+		fmt.Println("A seamless translation proxy that bridges Tekton Hub API calls to Artifact Hub,")
+		fmt.Println("enabling compatibility between systems while leveraging Artifact Hub's powerful catalog.")
+		fmt.Println()
 		fmt.Println("Usage:")
 		flag.PrintDefaults()
+		fmt.Println()
+		fmt.Println("Configuration:")
+		fmt.Println("  The landing page can also be disabled via configuration file:")
+		fmt.Println("  landing_page:")
+		fmt.Println("    enabled: false")
+		fmt.Println()
+		fmt.Println("  Or via environment variable:")
+		fmt.Println("  THP_LANDING_PAGE_ENABLED=false")
 		os.Exit(0)
 	}
 
@@ -49,6 +61,9 @@ func main() {
 	}
 	if *bindAddr != "" {
 		cfg.Server.Host = *bindAddr
+	}
+	if *disableLandingPage {
+		cfg.LandingPage.Enabled = false
 	}
 
 	// Setup logging
@@ -73,7 +88,7 @@ func main() {
 	)
 
 	// Setup routes
-	router := setupRoutes(handlers)
+	router := setupRoutes(handlers, cfg)
 
 	// Add middleware
 	router.Use(handlers.LoggingMiddleware)
@@ -106,8 +121,13 @@ func setupLogging(cfg config.LoggingConfig) {
 	logrus.SetOutput(os.Stdout)
 }
 
-func setupRoutes(h *handlers.Handlers) *mux.Router {
+func setupRoutes(h *handlers.Handlers, cfg *config.Config) *mux.Router {
 	router := mux.NewRouter()
+
+	// Landing page (configurable)
+	if cfg.LandingPage.Enabled {
+		router.HandleFunc("/", h.LandingPage).Methods("GET")
+	}
 
 	// Catalog endpoints
 	router.HandleFunc("/v1/catalogs", h.ListCatalogs).Methods("GET")
