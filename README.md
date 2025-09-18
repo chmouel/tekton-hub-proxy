@@ -1323,40 +1323,27 @@ All requests are logged with:
 
 ## Security
 
-This proxy is designed with security in mind:
+This proxy is designed with a security-first mindset, incorporating multiple layers of protection.
 
-### Security Features
+### Read-Only Design
+The proxy operates in a read-only capacity. It only performs `GET` requests to the upstream Artifact Hub API and does not accept or store any user-provided data, which significantly limits its attack surface.
 
-- **Read-only Architecture**: The proxy only performs GET requests to Artifact Hub, eliminating many attack vectors
-- **Input Validation**: Proper validation of path parameters, query strings, and route constraints
-- **Structured Error Handling**: Error responses don't leak sensitive internal information
-- **Panic Recovery**: Middleware prevents application crashes from unhandled panics
-- **Dependency Management**: Uses well-maintained, up-to-date dependencies
+### Denial of Service (DoS) Protection
+To protect against resource exhaustion attacks, the proxy implements strict timeouts:
+- **Server Timeouts**: The HTTP server is configured with `Read`, `Write`, and `Idle` timeouts to prevent slow client attacks (e.g., Slowloris) from holding connections open and exhausting resources.
+- **Client Timeouts**: The HTTP client that connects to Artifact Hub has a built-in timeout, ensuring that a slow or unresponsive backend cannot cause a cascading failure in the proxy.
 
-### Security Considerations
+### Secure HTTP Headers
+A security middleware is in place to add the following HTTP headers to all responses, providing an additional layer of defense against common web vulnerabilities:
+- `X-Content-Type-Options: nosniff`: Prevents browsers from MIME-sniffing the content-type of a response.
+- `X-Frame-Options: DENY`: Protects against clickjacking attacks by preventing the content from being embedded in iframes.
+- `Content-Security-Policy: default-src 'self'`: Restricts the sources from which content can be loaded, mitigating XSS and other injection attacks.
+- `X-XSS-Protection: 1; mode=block`: Enables the built-in XSS filter in older browsers.
 
-- **CORS Policy**: Currently configured with permissive CORS (`*`) - consider restricting to trusted origins in production
-- **Rate Limiting**: No built-in rate limiting - recommend implementing at reverse proxy level for production use
-- **Security Headers**: Consider adding security headers (CSP, HSTS, etc.) via reverse proxy
-- **Logging**: Debug logs may contain internal paths - use appropriate log levels in production
-
-### Production Security Recommendations
-
-1. **Deploy behind a reverse proxy** (Nginx/Caddy) with:
-   - SSL/TLS termination
-   - Rate limiting
-   - Security headers
-   - Restricted CORS origins
-
-2. **Network Security**:
-   - Restrict outbound traffic to `artifacthub.io`
-   - Use container security scanning
-   - Keep dependencies updated
-
-3. **Monitoring**:
-   - Monitor for unusual request patterns
-   - Set up log aggregation
-   - Track cache hit/miss ratios
+### Secure Coding Practices
+- **Input Validation**: Path parameters are validated using regular expressions at the routing layer (e.g., ensuring IDs are numeric).
+- **Panic Recovery**: A recovery middleware catches any unhandled panics, preventing the server from crashing and logging the error instead.
+- **No Sensitive Information in Errors**: The proxy returns generic error messages and avoids leaking internal details like stack traces.
 
 ## Limitations
 

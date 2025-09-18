@@ -75,3 +75,23 @@ func (w *responseWriterWrapper) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 	w.ResponseWriter.WriteHeader(statusCode)
 }
+
+// SecurityMiddleware adds common security headers to every response.
+func (h *Handlers) SecurityMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Provides protection against MIME type sniffing.
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+
+		// Protects against clickjacking attacks.
+		w.Header().Set("X-Frame-Options", "DENY")
+
+		// A strong Content Security Policy helps to prevent a wide range of attacks,
+		// including Cross-Site Scripting (XSS) and other code injection attacks.
+		w.Header().Set("Content-Security-Policy", "default-src 'self'")
+
+		// Enables the Cross-site scripting (XSS) filter built into most recent web browsers.
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+
+		next.ServeHTTP(w, r)
+	})
+}

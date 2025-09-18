@@ -119,12 +119,21 @@ func main() {
 	router.Use(handlers.LoggingMiddleware)
 	router.Use(handlers.CORSMiddleware)
 	router.Use(handlers.RecoveryMiddleware)
+	router.Use(handlers.SecurityMiddleware)
 
 	// Start server
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logrus.WithField("address", addr).Info("Server starting")
 
-	if err := http.ListenAndServe(addr, router); err != nil {
+	server := &http.Server{
+		Addr:         addr,
+		Handler:      router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
 		logrus.Fatalf("Server failed to start: %v", err)
 	}
 }
