@@ -409,7 +409,9 @@ hub-catalog-type: tektonhub</pre>
 
         <div class="disclaimer">
             <p>Service gratuitously provided by <a href="https://pipelinesascode.com" target="_blank" rel="noopener noreferrer">pipelinesascode.com</a></p>
-            <p>Source code: <a href="https://github.com/chmouel/tekton-hub-proxy" target="_blank" rel="noopener noreferrer">chmouel/tekton-hub-proxy</a> • For support contact <a href="https://x.com/chmouel" target="_blank" rel="noopener noreferrer">@chmouel</a> on X</p>
+						<p>Not affiliated with Tekton or Artifact Hub projects</p>
+						<p>No guarantee of uptime or SLAs • Use at your own risk</p>
+            <p>Source code: <a href="https://github.com/chmouel/tekton-hub-proxy" target="_blank" rel="noopener noreferrer">chmouel/tekton-hub-proxy</a> • For a best effort support contact <a href="https://x.com/chmouel" target="_blank" rel="noopener noreferrer">@chmouel</a> on X</p>
         </div>
     </div>
 </body>
