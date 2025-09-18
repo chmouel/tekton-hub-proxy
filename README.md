@@ -23,6 +23,7 @@ transition to using Artifact Hub directly as modern Tekton tooling supports it n
 - **Comprehensive Middleware**: Includes CORS, logging, and recovery middleware
 - **Health Checks**: Built-in health check endpoint
 - **Docker Support**: Containerized deployment ready
+- **Security**: Read-only proxy with input validation and structured error handling
 
 ## Demo
 
